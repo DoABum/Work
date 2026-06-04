@@ -8,39 +8,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif; background: #f0f2f5; min-height: 100vh; }
 
-    /* ── 모달 ──────────────────────────────────────── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
-    }
-    .overlay.hidden { display: none; }
-    .modal {
-      background: white;
-      border-radius: 16px;
-      padding: 32px 28px;
-      max-width: 360px; width: 90%;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-    }
-    .modal h2 { font-size: 18px; color: #1e3a5f; margin-bottom: 8px; }
-    .modal p  { font-size: 13px; color: #666; line-height: 1.65; margin-bottom: 18px; }
-    .modal input {
-      width: 100%; border: 1.5px solid #dde3ea; border-radius: 8px;
-      padding: 10px 12px; font-size: 14px; outline: none; margin-bottom: 10px;
-      font-family: monospace;
-    }
-    .modal input:focus { border-color: #2d6a9f; }
-    .modal .m-btn {
-      width: 100%; padding: 12px;
-      background: #2d6a9f; color: white;
-      border: none; border-radius: 8px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-    }
-    .modal .m-btn:hover { background: #1e5080; }
-    .modal .m-note { font-size: 11px; color: #bbb; text-align: center; margin-top: 10px; }
-
-    /* ── 헤더 ───────────────────────────────────────── */
+    /* ── 헤더 ────────────────────── */
     header {
       background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
       color: white; padding: 15px 24px;
@@ -49,7 +17,7 @@
     }
     .h-left { display: flex; align-items: center; gap: 10px; }
     .h-left .ico { font-size: 22px; }
-    header h1 { font-size: 18px; font-weight: 700; }
+    header h1  { font-size: 18px; font-weight: 700; }
     header .sub { font-size: 12px; opacity: .75; margin-top: 2px; }
     .h-right { display: flex; align-items: center; gap: 8px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; }
@@ -64,10 +32,10 @@
     }
     .h-btn:hover { background: rgba(255,255,255,0.28); }
 
-    /* ── 레이아웃 ────────────────────────────────────── */
+    /* ── 레이아웃 ────────────────── */
     .wrap { display: flex; gap: 20px; padding: 18px 20px; max-width: 1380px; margin: 0 auto; }
 
-    /* ── 캘린더 ─────────────────────────────────────── */
+    /* ── 캘린더 ─────────────────── */
     .cal-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; }
     .month-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .month-card { background: white; border-radius: 12px; padding: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
@@ -89,14 +57,12 @@
     .dc.today   { font-weight: 700; outline: 2px solid #2d6a9f; outline-offset: -2px; }
     .dc.blocked { background: #f5f5f5 !important; color: #ccc !important; cursor: not-allowed; text-decoration: line-through; }
 
-    /* 선택 중 */
     .dc.sel-s { background: #2d6a9f !important; color: white !important; font-weight: 700; }
     .dc.in-r  { background: #cce0f5; color: #1e3a5f; border-radius: 0; }
     .dc.r-s   { background: #2d6a9f !important; color: white !important; font-weight: 700; border-radius: 5px 0 0 5px; }
     .dc.r-e   { background: #2d6a9f !important; color: white !important; font-weight: 700; border-radius: 0 5px 5px 0; }
     .dc.r-1   { background: #2d6a9f !important; color: white !important; font-weight: 700; border-radius: 5px; }
 
-    /* 저장된 휴가 색상 */
     .dc.v0 { background: #cce0f5; color: #1e3a5f; }
     .dc.v1 { background: #d5f0e0; color: #1a5c3a; }
     .dc.v2 { background: #fde8cc; color: #7a3b00; }
@@ -106,7 +72,6 @@
     .dc.v0.r-e,.dc.v1.r-e,.dc.v2.r-e,.dc.v3.r-e,.dc.v4.r-e { border-radius: 0 5px 5px 0; }
     .dc.v0.r-1,.dc.v1.r-1,.dc.v2.r-1,.dc.v3.r-1,.dc.v4.r-1 { border-radius: 5px; }
 
-    /* 툴팁 */
     .dc .tip {
       display: none; position: absolute; bottom: calc(100% + 4px); left: 50%;
       transform: translateX(-50%); background: #333; color: white;
@@ -122,7 +87,7 @@
     }
     .step { background: #2d6a9f; color: white; border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
 
-    /* ── 오른쪽 패널 ─────────────────────────────────── */
+    /* ── 오른쪽 패널 ─────────────── */
     .right { width: 305px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
     .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .ctitle { font-size: 14px; font-weight: 700; color: #1e3a5f; margin-bottom: 11px; display: flex; align-items: center; gap: 6px; }
@@ -178,7 +143,15 @@
     }
     .bdel:hover { background: #ffe0e0; color: #e74c3c; }
 
-    /* ── 토스트 ──────────────────────────────────────── */
+    /* ── 연결 안 된 경우 안내 ──── */
+    .not-connected {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 40px 20px; text-align: center; color: #888;
+    }
+    .not-connected .big { font-size: 48px; }
+    .not-connected p { font-size: 14px; line-height: 1.7; }
+
+    /* ── 토스트 ───────────────────── */
     #toast {
       position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(80px);
@@ -194,24 +167,8 @@
 </head>
 <body>
 
-<!-- ── 접속 코드 모달 ─────────────────────────────────── -->
-<div class="overlay hidden" id="tokenModal">
-  <div class="modal">
-    <h2>🔑 접속 코드 입력</h2>
-    <p>
-      교무부에서 제공한 <strong>접속 코드</strong>를 입력하세요.<br>
-      이 기기에서 한 번만 입력하면 됩니다.
-    </p>
-    <input type="password" id="tokenInput" placeholder="접속 코드를 입력하세요"
-           onkeydown="if(event.key==='Enter') saveToken()">
-    <button class="m-btn" onclick="saveToken()">입력 완료</button>
-    <div class="m-note">🔒 접속 코드는 이 기기 브라우저에만 저장됩니다.</div>
-  </div>
-</div>
-
 <div id="toast"></div>
 
-<!-- ── 헤더 ─────────────────────────────────────────── -->
 <header>
   <div class="h-left">
     <span class="ico">🏖️</span>
@@ -224,11 +181,9 @@
     <div class="dot" id="sDot"></div>
     <span id="statusText">연결 중…</span>
     <button class="h-btn" onclick="fetchData(true)">↻ 새로고침</button>
-    <button class="h-btn" onclick="changeToken()">⚙️ 코드변경</button>
   </div>
 </header>
 
-<!-- ── 본문 ─────────────────────────────────────────── -->
 <div class="wrap">
 
   <div class="cal-panel">
@@ -283,14 +238,12 @@
 </div>
 
 <script>
-// ── GitHub 저장소 설정 ──────────────────────────────────
-// ※ 아래 OWNER, REPO, BRANCH 는 실제 저장소에 맞게 유지하세요.
-const GH_OWNER  = 'doabum';
-const GH_REPO   = 'Work';
-const GH_BRANCH = 'main';
-const GH_FILE   = 'data/vacations.json';
+// ================================================================
+//  ★ 관리자 설정: 아래 URL을 Apps Script 배포 URL로 교체하세요 ★
+// ================================================================
+const SCRIPT_URL = 'APPS_SCRIPT_URL_HERE';
+// ================================================================
 
-// ── 상수 ──────────────────────────────────────────────
 const MONTHS = [
   {y:2026,m:8},{y:2026,m:9},{y:2026,m:10},
   {y:2026,m:11},{y:2026,m:12},{y:2027,m:1}
@@ -299,15 +252,12 @@ const MN  = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10�
 const DN  = ['일','월','화','수','목','금','토'];
 const today = toKey(new Date());
 
-// ── 상태 ──────────────────────────────────────────────
 let vacations = [];
 let blocked   = new Set();
-let fileSHA   = null;
 let selStart  = null;
 let selEnd    = null;
 let hover     = null;
 
-// ── 유틸 ──────────────────────────────────────────────
 function pad(n)  { return String(n).padStart(2,'0'); }
 function toKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function toDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
@@ -323,130 +273,70 @@ function workdays(s,e){
 }
 function totalDays(s,e){ return Math.round((toDate(e)-toDate(s))/86400000)+1; }
 function inR(d,s,e){ return d>=s&&d<=e; }
-function ci(id){ return id%5; }
+function ci(id){ return Number(String(id).slice(-1)) % 5; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── 토큰 관리 ─────────────────────────────────────────
-function getToken(){ return localStorage.getItem('ghToken')||''; }
-function saveToken(){
-  const v = document.getElementById('tokenInput').value.trim();
-  if(!v){ alert('접속 코드를 입력하세요.'); return; }
-  localStorage.setItem('ghToken', v);
-  document.getElementById('tokenModal').classList.add('hidden');
-  toast('접속 코드가 저장되었습니다.', 'ok');
-  fetchData();
-}
-function changeToken(){
-  const cur = getToken();
-  const v = prompt('새 접속 코드를 입력하세요:', cur ? '(현재 저장된 코드 있음)' : '');
-  if(v===null) return;
-  if(v.trim()){ localStorage.setItem('ghToken', v.trim()); toast('접속 코드가 변경되었습니다.', 'ok'); fetchData(); }
-}
+// ── API 연결 ──────────────────────────────────────────────
+function isConfigured() { return SCRIPT_URL !== 'APPS_SCRIPT_URL_HERE' && SCRIPT_URL.startsWith('https://'); }
 
-// ── GitHub API ────────────────────────────────────────
-async function ghRead(){
-  const headers = {'Accept':'application/vnd.github+json'};
-  if(getToken()) headers['Authorization'] = `token ${getToken()}`;
-  const res = await fetch(
-    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
-    { headers, cache: 'no-store' }
-  );
-  if(res.status===404){ fileSHA=null; return {vacations:[],blocked:[]}; }
-  if(res.status===401||res.status===403) throw new Error('접속 코드가 올바르지 않습니다.');
-  if(res.status===429) throw new Error('잠시 후 다시 시도해주세요 (API 한도 초과).');
-  if(!res.ok) throw new Error(`서버 오류 (${res.status})`);
-  const json = await res.json();
-  fileSHA = json.sha;
-  return JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\s/g,'')))));
-}
-
-async function ghWrite(data){
-  if(!getToken()){ document.getElementById('tokenModal').classList.remove('hidden'); throw new Error('접속 코드를 입력하세요.'); }
-  const body = {
-    message: '휴가 캘린더 업데이트',
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),
-    branch:  GH_BRANCH
-  };
-  if(fileSHA) body.sha = fileSHA;
-  const res = await fetch(
-    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-    { method:'PUT', headers:{ Authorization:`token ${getToken()}`, 'Content-Type':'application/json' }, body:JSON.stringify(body) }
-  );
-  if(res.status===401||res.status===403) throw new Error('접속 코드 오류: 저장 권한이 없습니다.');
-  if(res.status===409) throw new Error('동시 저장 충돌 — 새로고침 후 다시 시도하세요.');
-  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||`저장 오류 (${res.status})`); }
-  const json = await res.json();
-  fileSHA = json.content.sha;
-}
-
-// ── 데이터 가져오기 ────────────────────────────────────
-async function fetchData(manual=false){
+async function fetchData(manual=false) {
+  if (!isConfigured()) { setSt('err','미설정'); return; }
   setSt('spin','불러오는 중…');
-  try{
-    const d = await ghRead();
-    vacations = d.vacations||[];
-    blocked   = new Set(d.blocked||[]);
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=list`);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || '서버 오류');
+    vacations = data.vacations || [];
+    blocked   = new Set(data.blocked || []);
     renderAll();
-    const now=new Date();
+    const now = new Date();
     setSt('ok', `${pad(now.getHours())}:${pad(now.getMinutes())} 기준`);
-    if(manual) toast('최신 데이터로 새로고침했습니다.','ok');
-  }catch(e){
-    setSt('err', e.message);
-    if(manual) toast(e.message,'err');
-    if(e.message.includes('접속 코드')) document.getElementById('tokenModal').classList.remove('hidden');
+    if (manual) toast('새로고침 완료', 'ok');
+  } catch(e) {
+    setSt('err', '연결 오류');
+    if (manual) toast('연결에 실패했습니다. 잠시 후 다시 시도해주세요.', 'err');
   }
 }
 
-// ── 등록 ──────────────────────────────────────────────
-async function doAdd(){
+async function doAdd() {
   const ni   = document.getElementById('nameInput');
   const name = ni.value.trim();
-  if(!name){ ni.classList.add('bad'); ni.placeholder='이름을 입력해주세요!'; ni.focus(); return; }
+  if (!name) { ni.classList.add('bad'); ni.placeholder='이름을 입력해주세요!'; ni.focus(); return; }
   ni.classList.remove('bad');
-  if(!selStart||!selEnd) return;
+  if (!selStart || !selEnd) return;
   const memo = document.getElementById('memoInput').value.trim();
   const btn  = document.getElementById('addBtn');
   btn.disabled=true; btn.textContent='저장 중…';
-  try{
-    const data = await ghRead();
-    data.vacations.push({
-      id: Date.now(),
-      name, start:selStart, end:selEnd, memo,
-      ts: new Date().toLocaleString('ko-KR')
-    });
-    await ghWrite(data);
-    vacations = data.vacations;
-    blocked   = new Set(data.blocked||[]);
-    toast(`${esc(name)} 선생님 휴가가 등록되었습니다.`,'ok');
+  try {
+    const params = new URLSearchParams({action:'add', name, start:selStart, end:selEnd, memo});
+    const res  = await fetch(`${SCRIPT_URL}?${params}`);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || '저장 오류');
+    toast(`${esc(name)} 선생님 휴가가 등록되었습니다.`, 'ok');
     resetSel();
-    renderAll();
-  }catch(e){
-    toast(e.message,'err');
+    await fetchData();
+  } catch(e) {
+    toast('등록에 실패했습니다. 다시 시도해주세요.', 'err');
     btn.disabled=false; btn.textContent='등록';
   }
 }
 
-// ── 삭제 ──────────────────────────────────────────────
-async function doDel(id, name){
-  if(!confirm(`"${name}" 선생님의 휴가를 삭제하시겠습니까?`)) return;
+async function doDel(id, name) {
+  if (!confirm(`"${name}" 선생님의 휴가를 삭제하시겠습니까?`)) return;
   setSt('spin','삭제 중…');
-  try{
-    const data = await ghRead();
-    data.vacations = data.vacations.filter(v=>v.id!==id);
-    await ghWrite(data);
-    vacations = data.vacations;
-    blocked   = new Set(data.blocked||[]);
-    toast('삭제되었습니다.','ok');
-    renderAll();
-    setSt('ok','');
-  }catch(e){
-    toast(e.message,'err');
-    setSt('err',e.message);
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=delete&id=${id}`);
+    await res.json();
+    toast('삭제되었습니다.', 'ok');
+    await fetchData();
+  } catch(e) {
+    toast('삭제에 실패했습니다.', 'err');
+    setSt('err','오류');
   }
 }
 
-// ── 캘린더 렌더링 ──────────────────────────────────────
-function renderAll(){
+// ── 캘린더 렌더링 ─────────────────────────────────────────
+function renderAll() {
   const g = document.getElementById('monthGrid');
   g.innerHTML = '';
   MONTHS.forEach(({y,m})=>g.appendChild(buildMonth(y,m)));
@@ -454,7 +344,7 @@ function renderAll(){
   updateStats();
 }
 
-function buildMonth(year,month){
+function buildMonth(year, month) {
   const card = document.createElement('div'); card.className='month-card';
   const title= document.createElement('div'); title.className='month-title';
   title.textContent=`${year}년 ${MN[month-1]}`; card.appendChild(title);
@@ -462,70 +352,69 @@ function buildMonth(year,month){
   DN.forEach((n,i)=>{ const h=document.createElement('div'); h.className='day-hdr'+(i===0?' sun':i===6?' sat':''); h.textContent=n; hdrs.appendChild(h); });
   card.appendChild(hdrs);
   const dg = document.createElement('div'); dg.className='days';
-  const firstDow = new Date(year,month-1,1).getDay();
-  const dim      = new Date(year,month,0).getDate();
-  for(let i=0;i<firstDow;i++){ const e=document.createElement('div');e.className='dc empty';dg.appendChild(e); }
-  for(let d=1;d<=dim;d++){
+  const fd = new Date(year,month-1,1).getDay();
+  const dm = new Date(year,month,0).getDate();
+  for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='dc empty';dg.appendChild(e);}
+  for(let d=1;d<=dm;d++){
     const key=`${year}-${pad(month)}-${pad(d)}`;
     const dow=new Date(year,month-1,d).getDay();
     const cell=document.createElement('div');
     cell.textContent=d; cell.dataset.key=key;
     const cls=['dc'];
-    if(dow===0) cls.push('sun'); if(dow===6) cls.push('sat');
-    if(key===today) cls.push('today');
+    if(dow===0)cls.push('sun'); if(dow===6)cls.push('sat');
+    if(key===today)cls.push('today');
     if(blocked.has(key)){
       cls.push('blocked');
-    } else {
+    }else{
       styleCell(cls,cell,key);
-      cell.addEventListener('click',  ()=>onDayClick(key));
+      cell.addEventListener('click',()=>onDay(key));
       cell.addEventListener('mouseenter',()=>{ if(selStart&&!selEnd){hover=key;renderAll();} });
       cell.addEventListener('mouseleave',()=>{ hover=null;renderAll(); });
     }
     cell.className=cls.join(' ');
     dg.appendChild(cell);
   }
-  card.appendChild(dg);
-  return card;
+  card.appendChild(dg); return card;
 }
 
 function styleCell(cls,cell,key){
-  for(let v of vacations){
-    if(!inR(key,v.start,v.end)) continue;
+  for(const v of vacations){
+    if(!inR(key,v.start,v.end))continue;
     cls.push(`v${ci(v.id)}`);
     markR(cls,key,v.start,v.end);
     const tip=document.createElement('div'); tip.className='tip'; tip.textContent=v.name; cell.appendChild(tip);
     return;
   }
-  const eff = (selStart&&!selEnd&&hover) ? hover : selEnd;
+  const eff=(selStart&&!selEnd&&hover)?hover:selEnd;
   if(selStart&&eff){
     const s=selStart<=eff?selStart:eff, e=selStart<=eff?eff:selStart;
     if(inR(key,s,e)){
-      if(key===s&&key===e) cls.push('r-1','sel-s');
-      else if(key===s)     cls.push('r-s','sel-s');
-      else if(key===e)     cls.push('r-e','sel-s');
-      else                 cls.push('in-r');
+      if(key===s&&key===e)cls.push('r-1','sel-s');
+      else if(key===s)cls.push('r-s','sel-s');
+      else if(key===e)cls.push('r-e','sel-s');
+      else cls.push('in-r');
     }
-  } else if(selStart&&key===selStart){ cls.push('sel-s'); }
+  }else if(selStart&&key===selStart){cls.push('sel-s');}
 }
 
 function markR(cls,key,s,e){
-  if(s===e)       cls.push('r-1');
-  else if(key===s) cls.push('r-s');
-  else if(key===e) cls.push('r-e');
-  else             cls.push('in-r');
+  if(s===e)cls.push('r-1');
+  else if(key===s)cls.push('r-s');
+  else if(key===e)cls.push('r-e');
+  else cls.push('in-r');
 }
 
-// ── 클릭 ──────────────────────────────────────────────
-function onDayClick(key){
-  if(blocked.has(key)) return;
-  if(!selStart){ selStart=key; selEnd=null; hover=null; setHint(2,'종료일을 클릭하세요.'); }
-  else if(!selEnd){ if(key<selStart){selEnd=selStart;selStart=key;}else selEnd=key; hover=null; setHint(3,'성명 확인 후 [등록]을 누르세요.'); }
-  else { selStart=key; selEnd=null; hover=null; setHint(2,'종료일을 클릭하세요.'); }
+function onDay(key){
+  if(blocked.has(key))return;
+  if(!selStart){selStart=key;selEnd=null;hover=null;setHint(2,'종료일을 클릭하세요.');}
+  else if(!selEnd){if(key<selStart){selEnd=selStart;selStart=key;}else selEnd=key;hover=null;setHint(3,'성명 확인 후 [등록]을 누르세요.');}
+  else{selStart=key;selEnd=null;hover=null;setHint(2,'종료일을 클릭하세요.');}
   updateForm(); renderAll();
 }
+
 function setHint(n,t){ document.getElementById('stepBadge').textContent=`${n}단계`; document.getElementById('hintText').textContent=t; }
 function updateForm(){
-  const sd=document.getElementById('startDisp'), ed=document.getElementById('endDisp'), btn=document.getElementById('addBtn');
+  const sd=document.getElementById('startDisp'),ed=document.getElementById('endDisp'),btn=document.getElementById('addBtn');
   if(selStart){sd.textContent=kor(selStart);sd.classList.add('on');}else{sd.textContent='날짜를 클릭하세요';sd.classList.remove('on');}
   if(selEnd){ed.textContent=kor(selEnd);ed.classList.add('on');}else if(selStart){ed.textContent='종료일 선택 중…';ed.classList.add('on');}else{ed.textContent='날짜를 클릭하세요';ed.classList.remove('on');}
   btn.disabled=!(selStart&&selEnd); btn.textContent='등록';
@@ -540,7 +429,6 @@ function resetSel(){
   updateForm(); renderAll();
 }
 
-// ── 목록 / 통계 ────────────────────────────────────────
 function renderList(){
   const l=document.getElementById('vlist');
   document.getElementById('listBadge').textContent=vacations.length;
@@ -549,12 +437,12 @@ function renderList(){
     const item=document.createElement('div');
     item.className=`vitem c${ci(v.id)}`;
     item.innerHTML=`
-      <button class="bdel" onclick="doDel(${v.id},'${esc(v.name)}')" title="삭제">✕</button>
+      <button class="bdel" onclick="doDel('${v.id}','${esc(v.name)}')" title="삭제">✕</button>
       <div class="vn">${esc(v.name)}</div>
       <div class="vr">📅 ${kor(v.start)} ~ ${kor(v.end)}</div>
       <div class="vd">총 ${totalDays(v.start,v.end)}일 (평일 ${workdays(v.start,v.end)}일)</div>
       ${v.memo?`<div class="vm">💬 ${esc(v.memo)}</div>`:''}
-      <div class="vts">등록: ${v.ts||''}</div>`;
+      <div class="vts">등록: ${v.ts}</div>`;
     l.appendChild(item);
   });
 }
@@ -563,25 +451,17 @@ function updateStats(){
   document.getElementById('sDays').textContent=vacations.reduce((s,v)=>s+workdays(v.start,v.end),0);
 }
 
-// ── 상태 / 토스트 ──────────────────────────────────────
-function setSt(state,msg){
-  document.getElementById('sDot').className='dot '+state;
-  document.getElementById('statusText').textContent=msg;
-}
+function setSt(state,msg){ document.getElementById('sDot').className='dot '+state; document.getElementById('statusText').textContent=msg; }
 let _t;
-function toast(msg,type=''){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='show '+(type||'');
-  clearTimeout(_t); _t=setTimeout(()=>el.className='',3200);
-}
+function toast(msg,type=''){ const el=document.getElementById('toast'); el.textContent=msg; el.className='show '+(type||''); clearTimeout(_t); _t=setTimeout(()=>el.className='',3200); }
 
-// ── 자동 새로고침 (60초) ──────────────────────────────
+// ── 자동 새로고침 60초 ──
 setInterval(()=>fetchData(),60000);
 
-// ── 초기화 ────────────────────────────────────────────
-if(!getToken()) document.getElementById('tokenModal').classList.remove('hidden');
-else fetchData();
+// ── 초기 실행 ──
+renderAll();
 updateForm();
+fetchData();
 </script>
 </body>
 </html>
