@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장기재직자 휴가 캘린더</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    header .icon { font-size: 24px; }
+    header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    header .subtitle { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+
+    .container {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── 왼쪽 캘린더 영역 ── */
+    .calendar-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .month-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .month-title {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e8eef5;
+    }
+
+    .day-headers {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 4px;
+    }
+
+    .day-header {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 0;
+      color: #888;
+    }
+    .day-header.sun { color: #e74c3c; }
+    .day-header.sat { color: #3498db; }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      user-select: none;
+    }
+
+    .day-cell:hover:not(.empty):not(.blocked) {
+      background: #e8f0fe;
+      transform: scale(1.08);
+    }
+
+    .day-cell.empty { cursor: default; }
+
+    .day-cell.sun { color: #e74c3c; }
+    .day-cell.sat { color: #3498db; }
+
+    .day-cell.today {
+      font-weight: 700;
+      outline: 2px solid #2d6a9f;
+      outline-offset: -2px;
+    }
+
+    .day-cell.blocked {
+      background: #f5f5f5;
+      color: #ccc;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .day-cell.selecting-start {
+      background: #2d6a9f !important;
+      color: white !important;
+      font-weight: 700;
+      border-radius: 6px;
+    }
+
+    .day-cell.in-range {
+      background: #cce0f5;
+      color: #1e3a5f;
+      border-radius: 0;
+    }
+
+    .day-cell.range-start {
+      background: #2d6a9f !important;
+      color: white !important;
+      font-weight: 700;
+      border-radius: 6px 0 0 6px;
+    }
+
+    .day-cell.range-end {
+      background: #2d6a9f !important;
+      color: white !important;
+      font-weight: 700;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .day-cell.range-single {
+      background: #2d6a9f !important;
+      color: white !important;
+      font-weight: 700;
+      border-radius: 6px;
+    }
+
+    /* 여러 휴가 기간이 겹칠 때 색상 구분 */
+    .day-cell.vacation-0 { background: #cce0f5; color: #1e3a5f; }
+    .day-cell.vacation-1 { background: #d5f0e0; color: #1a5c3a; }
+    .day-cell.vacation-2 { background: #fde8cc; color: #7a3b00; }
+    .day-cell.vacation-3 { background: #e8d5f5; color: #4a1a7a; }
+    .day-cell.vacation-4 { background: #ffd5d5; color: #7a1a1a; }
+
+    .hint-bar {
+      background: white;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #555;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hint-bar .step-badge {
+      background: #2d6a9f;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── 오른쪽 기록 패널 ── */
+    .record-panel {
+      width: 320px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-title .count-badge {
+      background: #2d6a9f;
+      color: white;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 12px;
+    }
+
+    /* 입력 영역 */
+    .input-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-row label {
+      font-size: 12px;
+      color: #666;
+      width: 36px;
+      flex-shrink: 0;
+    }
+
+    .date-display {
+      flex: 1;
+      border: 1.5px solid #dde3ea;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: #333;
+      background: #fafbfc;
+      min-height: 34px;
+    }
+
+    .date-display.filled {
+      border-color: #2d6a9f;
+      background: #f0f6ff;
+      color: #1e3a5f;
+      font-weight: 600;
+    }
+
+    .name-input {
+      width: 100%;
+      border: 1.5px solid #dde3ea;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: #333;
+      background: #fafbfc;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .name-input:focus { border-color: #2d6a9f; background: #f0f6ff; }
+
+    .memo-input {
+      width: 100%;
+      border: 1.5px solid #dde3ea;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: #333;
+      background: #fafbfc;
+      outline: none;
+      resize: none;
+      height: 56px;
+      transition: border-color 0.2s;
+    }
+    .memo-input:focus { border-color: #2d6a9f; background: #f0f6ff; }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
+
+    .btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: #2d6a9f; color: white; }
+    .btn-primary:hover { background: #1e5080; }
+    .btn-primary:disabled { background: #aac4de; cursor: not-allowed; }
+    .btn-secondary { background: #f0f2f5; color: #555; }
+    .btn-secondary:hover { background: #e0e3e8; }
+
+    /* 휴가 목록 */
+    .vacation-list { display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; }
+    .vacation-list:empty::after {
+      content: '등록된 휴가가 없습니다.';
+      display: block;
+      text-align: center;
+      color: #aaa;
+      font-size: 13px;
+      padding: 20px 0;
+    }
+
+    .vacation-item {
+      border-radius: 8px;
+      padding: 11px 12px;
+      position: relative;
+      border-left: 4px solid;
+    }
+
+    .vacation-item.color-0 { background: #eef6ff; border-color: #2d6a9f; }
+    .vacation-item.color-1 { background: #eefbf3; border-color: #27ae60; }
+    .vacation-item.color-2 { background: #fff8ee; border-color: #e67e22; }
+    .vacation-item.color-3 { background: #f5eeff; border-color: #8e44ad; }
+    .vacation-item.color-4 { background: #ffeeee; border-color: #e74c3c; }
+
+    .vacation-item .v-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 3px;
+    }
+    .vacation-item .v-range {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 2px;
+    }
+    .vacation-item .v-days {
+      font-size: 11px;
+      color: #888;
+    }
+    .vacation-item .v-memo {
+      font-size: 11px;
+      color: #777;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .btn-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #bbb;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .btn-delete:hover { background: #ffe0e0; color: #e74c3c; }
+
+    /* 통계 */
+    .stats-row {
+      display: flex;
+      gap: 8px;
+    }
+    .stat-box {
+      flex: 1;
+      background: #f0f6ff;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-box .stat-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2d6a9f;
+    }
+    .stat-box .stat-label {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    /* 색상 범례 */
+    .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #555;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="icon">🏖️</span>
+  <div>
+    <h1>장기재직자 휴가 캘린더</h1>
+    <div class="subtitle">2026년 8월 ~ 2027년 1월</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ══ 왼쪽 캘린더 ══ -->
+  <div class="calendar-panel">
+    <div class="hint-bar" id="hintBar">
+      <span class="step-badge">1단계</span>
+      <span id="hintText">캘린더에서 휴가 시작일을 클릭하세요.</span>
+    </div>
+    <div class="month-grid" id="monthGrid"></div>
+  </div>
+
+  <!-- ══ 오른쪽 패널 ══ -->
+  <div class="record-panel">
+
+    <!-- 통계 -->
+    <div class="panel-card">
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="statCount">0</div>
+          <div class="stat-label">등록 건수</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="statDays">0</div>
+          <div class="stat-label">총 휴가일수</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 입력 폼 -->
+    <div class="panel-card">
+      <div class="panel-title">✏️ 휴가 등록</div>
+      <div class="input-section">
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">성명</label>
+          <input type="text" class="name-input" id="nameInput" placeholder="이름을 입력하세요">
+        </div>
+        <div class="input-row">
+          <label>시작</label>
+          <div class="date-display" id="startDisplay">날짜를 클릭하세요</div>
+        </div>
+        <div class="input-row">
+          <label>종료</label>
+          <div class="date-display" id="endDisplay">날짜를 클릭하세요</div>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">메모 (선택)</label>
+          <textarea class="memo-input" id="memoInput" placeholder="비고 사항을 입력하세요"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="resetSelection()">초기화</button>
+          <button class="btn btn-primary" id="addBtn" onclick="addVacation()" disabled>등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 색상 범례 -->
+    <div class="panel-card" id="legendCard" style="display:none;">
+      <div class="panel-title">🎨 색상 구분</div>
+      <div class="legend" id="legendList"></div>
+    </div>
+
+    <!-- 휴가 목록 -->
+    <div class="panel-card">
+      <div class="panel-title">
+        📋 휴가 목록
+        <span class="count-badge" id="listCount">0</span>
+      </div>
+      <div class="vacation-list" id="vacationList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── 설정 ──────────────────────────────────────────────
+  const MONTHS = [
+    { year: 2026, month: 8 },
+    { year: 2026, month: 9 },
+    { year: 2026, month: 10 },
+    { year: 2026, month: 11 },
+    { year: 2026, month: 12 },
+    { year: 2027, month: 1 },
+  ];
+  const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const DAY_NAMES = ['일','월','화','수','목','금','토'];
+  const COLORS = ['#2d6a9f','#27ae60','#e67e22','#8e44ad','#e74c3c'];
+
+  let vacations = [];       // { id, name, start, end, memo, colorIdx }
+  let blockedDates = new Set();
+  let selStart = null;      // 'YYYY-MM-DD'
+  let selEnd   = null;
+  let hoverDate = null;
+  let colorCycle = 0;
+  const today = toKey(new Date());
+
+  // ── 유틸 ──────────────────────────────────────────────
+  function toKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function keyToDate(k) {
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  function formatKor(k) {
+    if (!k) return '';
+    const [y,m,d] = k.split('-').map(Number);
+    return `${y}년 ${m}월 ${d}일`;
+  }
+  function countWorkdays(s, e) {
+    let count = 0;
+    const cur = keyToDate(s);
+    const end = keyToDate(e);
+    while (cur <= end) {
+      const dow = cur.getDay();
+      if (dow !== 0 && dow !== 6) count++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+  }
+  function countDays(s, e) {
+    return Math.round((keyToDate(e) - keyToDate(s)) / 86400000) + 1;
+  }
+  function dateInRange(d, s, e) {
+    return d >= s && d <= e;
+  }
+
+  // ── 캘린더 렌더링 ─────────────────────────────────────
+  function renderAll() {
+    const grid = document.getElementById('monthGrid');
+    grid.innerHTML = '';
+    MONTHS.forEach(({ year, month }) => {
+      grid.appendChild(buildMonthCard(year, month));
+    });
+    updateStats();
+    renderList();
+    renderLegend();
+  }
+
+  function buildMonthCard(year, month) {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+
+    const title = document.createElement('div');
+    title.className = 'month-title';
+    title.textContent = `${year}년 ${MONTH_NAMES[month-1]}`;
+    card.appendChild(title);
+
+    const headers = document.createElement('div');
+    headers.className = 'day-headers';
+    DAY_NAMES.forEach((n, i) => {
+      const h = document.createElement('div');
+      h.className = 'day-header' + (i===0?' sun':i===6?' sat':'');
+      h.textContent = n;
+      headers.appendChild(h);
+    });
+    card.appendChild(headers);
+
+    const daysGrid = document.createElement('div');
+    daysGrid.className = 'days-grid';
+
+    const firstDay = new Date(year, month-1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // 빈 칸 채우기
+    for (let i = 0; i < firstDay; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell empty';
+      daysGrid.appendChild(cell);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dow = new Date(year, month-1, d).getDay();
+      const cell = document.createElement('div');
+      cell.textContent = d;
+      cell.dataset.key = key;
+
+      const classes = ['day-cell'];
+      if (dow === 0) classes.push('sun');
+      if (dow === 6) classes.push('sat');
+      if (key === today) classes.push('today');
+      if (blockedDates.has(key)) {
+        classes.push('blocked');
+      } else {
+        applyVacationStyle(classes, key);
+        cell.addEventListener('click', () => onDayClick(key));
+        cell.addEventListener('mouseenter', () => onDayHover(key));
+        cell.addEventListener('mouseleave', () => { hoverDate = null; renderAll(); });
+      }
+
+      cell.className = classes.join(' ');
+      daysGrid.appendChild(cell);
+    }
+
+    card.appendChild(daysGrid);
+    return card;
+  }
+
+  function applyVacationStyle(classes, key) {
+    // 저장된 휴가 강조
+    let vacIdx = -1;
+    for (let i = 0; i < vacations.length; i++) {
+      const v = vacations[i];
+      if (dateInRange(key, v.start, v.end)) {
+        vacIdx = v.colorIdx;
+        const isStart = key === v.start;
+        const isEnd   = key === v.end;
+        if (isStart && isEnd) classes.push('range-single');
+        else if (isStart)     classes.push('range-start');
+        else if (isEnd)       classes.push('range-end');
+        else                  classes.push('in-range');
+        classes.push(`vacation-${vacIdx}`);
+        break;
+      }
+    }
+    if (vacIdx >= 0) return;
+
+    // 현재 선택 중 강조
+    const effectiveEnd = (selStart && !selEnd && hoverDate) ? hoverDate : selEnd;
+    if (selStart && effectiveEnd) {
+      const s = selStart <= effectiveEnd ? selStart : effectiveEnd;
+      const e = selStart <= effectiveEnd ? effectiveEnd : selStart;
+      if (dateInRange(key, s, e)) {
+        if (key === s && key === e) classes.push('range-single', 'selecting-start');
+        else if (key === s)         classes.push('range-start', 'selecting-start');
+        else if (key === e)         classes.push('range-end', 'selecting-start');
+        else                        classes.push('in-range');
+      }
+    } else if (selStart && key === selStart) {
+      classes.push('selecting-start');
+    }
+  }
+
+  // ── 클릭 / 호버 ──────────────────────────────────────
+  function onDayHover(key) {
+    if (selStart && !selEnd) {
+      hoverDate = key;
+      renderAll();
+    }
+  }
+
+  function onDayClick(key) {
+    if (blockedDates.has(key)) return;
+
+    if (!selStart) {
+      selStart = key;
+      selEnd   = null;
+      hoverDate = null;
+      updateHint(2, '종료일을 클릭하세요. (시작일과 같은 날 클릭 시 당일 처리)');
+      updateForm();
+    } else if (!selEnd) {
+      if (key < selStart) { selEnd = selStart; selStart = key; }
+      else                { selEnd = key; }
+      hoverDate = null;
+      updateHint(3, '성명을 확인 후 [등록] 버튼을 누르세요.');
+      updateForm();
+    } else {
+      // 새 선택 시작
+      selStart = key;
+      selEnd   = null;
+      hoverDate = null;
+      updateHint(2, '종료일을 클릭하세요.');
+      updateForm();
+    }
+    renderAll();
+  }
+
+  function updateHint(step, msg) {
+    document.getElementById('hintBar').querySelector('.step-badge').textContent = `${step}단계`;
+    document.getElementById('hintText').textContent = msg;
+  }
+
+  function updateForm() {
+    const sd = document.getElementById('startDisplay');
+    const ed = document.getElementById('endDisplay');
+    const btn = document.getElementById('addBtn');
+
+    if (selStart) {
+      sd.textContent = formatKor(selStart);
+      sd.classList.add('filled');
+    } else {
+      sd.textContent = '날짜를 클릭하세요';
+      sd.classList.remove('filled');
+    }
+    if (selEnd) {
+      ed.textContent = formatKor(selEnd);
+      ed.classList.add('filled');
+    } else {
+      ed.textContent = selStart ? '종료일 선택 중…' : '날짜를 클릭하세요';
+      ed.classList.remove('filled');
+      if (selStart) ed.classList.add('filled');
+    }
+    btn.disabled = !(selStart && selEnd);
+  }
+
+  // ── 등록 / 삭제 ──────────────────────────────────────
+  function addVacation() {
+    if (!selStart || !selEnd) return;
+    const name = document.getElementById('nameInput').value.trim() || '(미입력)';
+    const memo = document.getElementById('memoInput').value.trim();
+    const id = Date.now();
+    vacations.push({ id, name, start: selStart, end: selEnd, memo, colorIdx: colorCycle % COLORS.length });
+    colorCycle++;
+    saveData();
+    resetSelection();
+    renderAll();
+  }
+
+  function deleteVacation(id) {
+    vacations = vacations.filter(v => v.id !== id);
+    // 색상 인덱스 재할당
+    vacations.forEach((v, i) => { v.colorIdx = i % COLORS.length; });
+    colorCycle = vacations.length;
+    saveData();
+    renderAll();
+  }
+
+  function resetSelection() {
+    selStart = null; selEnd = null; hoverDate = null;
+    document.getElementById('nameInput').value = '';
+    document.getElementById('memoInput').value = '';
+    updateHint(1, '캘린더에서 휴가 시작일을 클릭하세요.');
+    updateForm();
+    renderAll();
+  }
+
+  // ── 목록 / 통계 ───────────────────────────────────────
+  function renderList() {
+    const list = document.getElementById('vacationList');
+    document.getElementById('listCount').textContent = vacations.length;
+    list.innerHTML = '';
+    [...vacations].reverse().forEach(v => {
+      const days = countDays(v.start, v.end);
+      const item = document.createElement('div');
+      item.className = `vacation-item color-${v.colorIdx}`;
+      item.innerHTML = `
+        <button class="btn-delete" onclick="deleteVacation(${v.id})" title="삭제">✕</button>
+        <div class="v-name">${escHtml(v.name)}</div>
+        <div class="v-range">📅 ${formatKor(v.start)} ~ ${formatKor(v.end)}</div>
+        <div class="v-days">총 ${days}일 (평일 기준 ${countWorkdays(v.start,v.end)}일)</div>
+        ${v.memo ? `<div class="v-memo">💬 ${escHtml(v.memo)}</div>` : ''}
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function updateStats() {
+    document.getElementById('statCount').textContent = vacations.length;
+    const total = vacations.reduce((s, v) => s + countWorkdays(v.start, v.end), 0);
+    document.getElementById('statDays').textContent = total;
+  }
+
+  function renderLegend() {
+    const card = document.getElementById('legendCard');
+    const list = document.getElementById('legendList');
+    if (vacations.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    list.innerHTML = '';
+    vacations.forEach(v => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `<span class="legend-dot" style="background:${COLORS[v.colorIdx]}"></span>${escHtml(v.name)} (${v.start.slice(5).replace('-','/')})`;
+      list.appendChild(item);
+    });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── 로컬스토리지 ──────────────────────────────────────
+  function saveData() {
+    localStorage.setItem('vacations_2026', JSON.stringify(vacations));
+    localStorage.setItem('colorCycle_2026', colorCycle);
+  }
+  function loadData() {
+    try {
+      const d = localStorage.getItem('vacations_2026');
+      if (d) vacations = JSON.parse(d);
+      colorCycle = parseInt(localStorage.getItem('colorCycle_2026') || '0');
+    } catch(e) { vacations = []; }
+  }
+
+  // ── 날짜 차단 API (나중에 사용) ───────────────────────
+  function blockDates(dates) {
+    dates.forEach(d => blockedDates.add(d));
+    renderAll();
+  }
+  // 예: blockDates(['2026-08-15', '2026-10-03']);
+
+  // ── 초기화 ────────────────────────────────────────────
+  loadData();
+  renderAll();
+  updateForm();
+</script>
+</body>
+</html>
