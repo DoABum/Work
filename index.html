@@ -261,6 +261,12 @@ let hover     = null;
 function pad(n)  { return String(n).padStart(2,'0'); }
 function toKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function toDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
+
+// 구글 스프레드시트가 날짜를 ISO 문자열로 바꾸는 문제 정규화
+function normDate(v){
+  if(!v) return '';
+  return String(v).substring(0,10); // "YYYY-MM-DD" or "YYYY-MM-DDT..." → 앞 10자리만
+}
 function kor(k){
   if(!k) return '';
   const [y,m,d]=k.split('-').map(Number);
@@ -286,8 +292,12 @@ async function fetchData(manual=false) {
     const res  = await fetch(`${SCRIPT_URL}?action=list`);
     const data = await res.json();
     if (data.status !== 'ok') throw new Error(data.message || '서버 오류');
-    vacations = data.vacations || [];
-    blocked   = new Set(data.blocked || []);
+    vacations = (data.vacations||[]).map(v=>({
+      ...v,
+      start: normDate(v.start),
+      end:   normDate(v.end)
+    }));
+    blocked = new Set(data.blocked||[]);
     renderAll();
     const now = new Date();
     setSt('ok', `${pad(now.getHours())}:${pad(now.getMinutes())} 기준`);
