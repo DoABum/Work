@@ -367,9 +367,6 @@ function buildMonth(year, month) {
       cls.push('blocked');
     }else{
       styleCell(cls,cell,key);
-      cell.addEventListener('click',()=>onDay(key));
-      cell.addEventListener('mouseenter',()=>{ if(selStart&&!selEnd){hover=key;updateHover();} });
-      cell.addEventListener('mouseleave',()=>{ if(selStart&&!selEnd){hover=null;updateHover();} });
     }
     cell.className=cls.join(' ');
     dg.appendChild(cell);
@@ -477,6 +474,32 @@ function setSt(state,msg){ document.getElementById('sDot').className='dot '+stat
 let _t;
 function toast(msg,type=''){ const el=document.getElementById('toast'); el.textContent=msg; el.className='show '+(type||''); clearTimeout(_t); _t=setTimeout(()=>el.className='',3200); }
 
+// ── 이벤트 위임: monthGrid 하나에서 모든 클릭·호버 처리 ──
+function initEvents(){
+  const grid=document.getElementById('monthGrid');
+
+  // 클릭 — renderAll()로 재구성된 셀에도 항상 동작
+  grid.addEventListener('click',e=>{
+    const cell=e.target.closest('.dc[data-key]');
+    if(!cell||cell.classList.contains('blocked')||cell.classList.contains('empty'))return;
+    onDay(cell.dataset.key);
+  });
+
+  // 마우스 이동 — 셀이 바뀔 때만 updateHover() 호출
+  grid.addEventListener('mouseover',e=>{
+    if(!selStart||selEnd)return;
+    const cell=e.target.closest('.dc[data-key]');
+    const nk=(cell&&!cell.classList.contains('blocked')&&!cell.classList.contains('empty'))
+      ?cell.dataset.key:null;
+    if(nk!==hover){hover=nk;updateHover();}
+  });
+
+  // 그리드 밖으로 나가면 hover 초기화
+  grid.addEventListener('mouseleave',()=>{
+    if(hover){hover=null;updateHover();}
+  });
+}
+
 // ── 자동 새로고침 60초 ──
 setInterval(()=>fetchData(),60000);
 
@@ -484,6 +507,7 @@ setInterval(()=>fetchData(),60000);
 renderAll();
 updateForm();
 fetchData();
+initEvents(); // 이벤트 위임 1회 등록
 </script>
 </body>
 </html>
