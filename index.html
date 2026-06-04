@@ -368,8 +368,8 @@ function buildMonth(year, month) {
     }else{
       styleCell(cls,cell,key);
       cell.addEventListener('click',()=>onDay(key));
-      cell.addEventListener('mouseenter',()=>{ if(selStart&&!selEnd){hover=key;renderAll();} });
-      cell.addEventListener('mouseleave',()=>{ hover=null;renderAll(); });
+      cell.addEventListener('mouseenter',()=>{ if(selStart&&!selEnd){hover=key;updateHover();} });
+      cell.addEventListener('mouseleave',()=>{ if(selStart&&!selEnd){hover=null;updateHover();} });
     }
     cell.className=cls.join(' ');
     dg.appendChild(cell);
@@ -402,6 +402,28 @@ function markR(cls,key,s,e){
   else if(key===s)cls.push('r-s');
   else if(key===e)cls.push('r-e');
   else cls.push('in-r');
+}
+
+// hover 미리보기: DOM 재구성 없이 클래스만 업데이트
+function updateHover(){
+  document.querySelectorAll('.dc[data-key]').forEach(cell=>{
+    const k=cell.dataset.key;
+    if(cell.classList.contains('blocked'))return;
+    if(vacations.some(v=>inR(k,v.start,v.end)))return;
+    cell.classList.remove('sel-s','in-r','r-s','r-e','r-1');
+    const eff=(selStart&&!selEnd&&hover)?hover:selEnd;
+    if(selStart&&eff){
+      const s=selStart<=eff?selStart:eff, e=selStart<=eff?eff:selStart;
+      if(inR(k,s,e)){
+        if(k===s&&k===e)cell.classList.add('r-1','sel-s');
+        else if(k===s)cell.classList.add('r-s','sel-s');
+        else if(k===e)cell.classList.add('r-e','sel-s');
+        else cell.classList.add('in-r');
+        return;
+      }
+    }
+    if(selStart&&k===selStart)cell.classList.add('sel-s');
+  });
 }
 
 function onDay(key){
