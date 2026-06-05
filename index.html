@@ -252,7 +252,7 @@ const MONTHS = [
 ];
 const HOLIDAYS = new Set([
   '2026-08-15','2026-08-17',
-  '2026-09-24','2026-09-25','2026-09-26','2026-09-28',
+  '2026-09-24','2026-09-25','2026-09-26',
   '2026-10-03','2026-10-05',
   '2026-10-09',
   '2026-12-25',
@@ -272,6 +272,20 @@ const SCHOOL_BLOCKED_RANGES = [
 ];
 function schoolBlockedReason(key){
   for(const {s,e,r} of SCHOOL_BLOCKED_RANGES){if(key>=s&&key<=e)return r;}
+  return null;
+}
+const SOFT_WARN_RANGES = [
+  {s:'2026-08-19',e:'2026-08-21',r:'학기초 준비기간'},
+  {s:'2026-09-21',e:'2026-09-23',r:'연휴전후'},
+  {s:'2026-09-28',e:'2026-09-28',r:'연휴전후'},
+  {s:'2026-10-01',e:'2026-10-08',r:'연휴전후 및 성적처리'},
+  {s:'2026-10-16',e:'2026-10-26',r:'3학년 상담주간'},
+  {s:'2026-11-20',e:'2026-11-27',r:'3학년 성적처리'},
+  {s:'2026-12-10',e:'2026-12-18',r:'1,2학년 성적처리'},
+  {s:'2026-12-28',e:'2027-01-06',r:'성적처리 및 생활기록부 작성'},
+];
+function softWarnReason(key){
+  for(const {s,e,r} of SOFT_WARN_RANGES){if(key>=s&&key<=e)return r;}
   return null;
 }
 const MN  = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -339,6 +353,13 @@ async function doAdd() {
   {const sbSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
    while(c<=se){const r=schoolBlockedReason(toKey(c));if(r)sbSet.add(r);c.setDate(c.getDate()+1);}
    if(sbSet.size>0){alert(`선택한 기간에 휴가를 등록할 수 없습니다.\n\n포함된 학교 일정: ${[...sbSet].join(', ')}\n\n해당 날짜를 제외하고 다시 선택해 주세요.`);return;}}
+
+  // 소프트 경고 날짜 포함 여부 검사 (등록은 가능)
+  {const swSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
+   while(c<=se){const r=softWarnReason(toKey(c));if(r)swSet.add(r);c.setDate(c.getDate()+1);}
+   if(swSet.size>0){
+     if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n(사유: ${[...swSet].join(', ')})`))return;
+   }}
 
   // 날짜 겹침 검사
   const overlap = vacations.filter(v => selStart <= v.end && selEnd >= v.start);
