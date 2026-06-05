@@ -303,7 +303,14 @@ let hover     = null;
 function pad(n)  { return String(n).padStart(2,'0'); }
 function toKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function toDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
-function normDate(v){ if(!v) return ''; return String(v).substring(0,10); }
+function normDate(v){
+  if(!v) return '';
+  const s = String(v);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return s.substring(0,10);
+  return toKey(d);
+}
 function kor(k){
   if(!k) return '';
   const [y,m,d]=k.split('-').map(Number);
@@ -408,7 +415,7 @@ async function doAdd() {
     resetSel();
     await fetchData();
   } catch(e) {
-    toast('등록에 실패했습니다. 다시 시도해주세요.', 'err');
+    toast('등낅에 실패했습니다. 다시 시도해주세요.', 'err');
     btn.disabled=false; btn.textContent='등록';
   }
 }
