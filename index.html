@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>장기재직자 휴가 캘린더</title>
+  <title>미사강변중학교 장기재직자 휴가 캘린더</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif; background: #f0f2f5; min-height: 100vh; }
@@ -171,7 +171,7 @@
   <div class="h-left">
     <span class="ico">🏖️</span>
     <div>
-      <h1>장기재직자 휴가 캘린더</h1>
+      <h1>미사강변중학교 장기재직자 휴가 캘린더</h1>
       <div class="sub">2026년 8월 ~ 2027년 1월</div>
     </div>
   </div>
@@ -243,10 +243,15 @@ const MONTHS = [
 const HOLIDAYS = new Set([
   '2026-08-15','2026-08-17',
   '2026-09-24','2026-09-25','2026-09-26',
-  '2026-10-03','2026-10-05',
+  '2026-10-03','2026-10-05','2026-10-06',
   '2026-10-09',
+  '2026-11-19',
   '2026-12-25',
   '2027-01-01',
+]);
+const DISCRETIONARY_HOLIDAYS = new Map([
+  ['2026-10-06', '재량휴업일'],
+  ['2026-11-19', '수능(재량휴업일)'],
 ]);
 const SCHOOL_BLOCKED_RANGES = [
   {s:'2026-08-01',e:'2026-08-17',r:'여름방학'},
@@ -255,7 +260,7 @@ const SCHOOL_BLOCKED_RANGES = [
   {s:'2026-10-19',e:'2026-10-19',r:'학부모공개수업'},
   {s:'2026-10-23',e:'2026-10-23',r:'스포츠의 날'},
   {s:'2026-11-16',e:'2026-11-18',r:'정기시험'},
-  {s:'2026-11-19',e:'2026-11-19',r:'수능시험'},
+  {s:'2026-11-19',e:'2026-11-19',r:'수능(재량휴업일)'},
   {s:'2026-12-07',e:'2026-12-09',r:'정기시험'},
   {s:'2026-12-24',e:'2026-12-24',r:'축제'},
   {s:'2027-01-07',e:'2027-01-31',r:'겨울방학'},
@@ -299,7 +304,7 @@ function kor(k){
 }
 function workdays(s,e){
   let n=0, c=toDate(s), end=toDate(e);
-  while(c<=end){const w=c.getDay();if(w&&w!==6)n++;c.setDate(c.getDate()+1);}
+  while(c<=end){const w=c.getDay();const k=toKey(c);if(w&&w!==6&&!HOLIDAYS.has(k))n++;c.setDate(c.getDate()+1);}
   return n;
 }
 function totalDays(s,e){ return Math.round((toDate(e)-toDate(s))/86400000)+1; }
@@ -356,7 +361,7 @@ async function doAdd() {
   // 학교 일정 및 주의 날짜 경고 (등록 가능)
   let warnInfo='';
   {const wMap=new Map(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
-   while(c<=se){const k=toKey(c);const r=schoolBlockedReason(k)||softWarnReason(k);if(r){if(!wMap.has(r))wMap.set(r,[]);wMap.get(r).push(k);}c.setDate(c.getDate()+1);}
+   while(c<=se){const k=toKey(c);if(!HOLIDAYS.has(k)){const r=schoolBlockedReason(k)||softWarnReason(k);if(r){if(!wMap.has(r))wMap.set(r,[]);wMap.get(r).push(k);}}c.setDate(c.getDate()+1);}
    if(wMap.size>0){
      const lines=[...wMap.entries()].map(([r,ds])=>`${r} (${fmtDateRanges(ds)})`);
      if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n${lines.join('\n')}`))return;
@@ -445,7 +450,7 @@ function buildMonth(year, month) {
     if(HOLIDAYS.has(key))cls.push('holiday');
     const sbr=schoolBlockedReason(key);
     const swr=softWarnReason(key);
-    const evLabel=sbr||swr;
+    const evLabel=DISCRETIONARY_HOLIDAYS.get(key)||sbr||swr;
     if(evLabel){cls.push('has-ev');const lbl=document.createElement('div');lbl.className='ev-lbl';lbl.textContent=evLabel;cell.appendChild(lbl);}
     if(blocked.has(key)){cls.push('blocked');}
     else{styleCell(cls,cell,key);}
