@@ -47,7 +47,7 @@
     .days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
     .dc {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 14px; border-radius: 5px; cursor: pointer;
+      font-size: 16px; border-radius: 5px; cursor: pointer;
       transition: all .12s; user-select: none; position: relative;
     }
     .dc:hover:not(.empty):not(.blocked) { background: #e8f0fe; transform: scale(1.1); }
@@ -57,8 +57,8 @@
     .dc.today   { font-weight: 700; outline: 2px solid #2d6a9f; outline-offset: -2px; }
     .dc.blocked { background: #f5f5f5 !important; color: #ccc !important; cursor: not-allowed; text-decoration: line-through; }
     .dc.holiday { color: #e74c3c !important; }
-    .dc.has-ev  { flex-direction: column; gap: 1px; }
-    .dc .ev-lbl { font-size: 7px; color: #999; text-align: center; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; pointer-events: none; }
+    .dc.has-ev  { flex-direction: column; gap: 1px; aspect-ratio: auto; padding: 3px 1px; }
+    .dc .ev-lbl { font-size: 9px; color: #888; text-align: center; line-height: 1.2; max-width: 100%; padding: 0 2px; pointer-events: none; white-space: normal; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     .dc.sel-s { background: #2d6a9f !important; color: white !important; font-weight: 700; }
     .dc.in-r  { background: #cce0f5; color: #1e3a5f; border-radius: 0; }
@@ -318,6 +318,20 @@ function totalDays(s,e){ return Math.round((toDate(e)-toDate(s))/86400000)+1; }
 function inR(d,s,e){ return d>=s&&d<=e; }
 function ci(id){ return Number(String(id).slice(-1)) % 5; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function korShort(k){ const [,m,d]=k.split('-').map(Number); return `${m}/${d}`; }
+function fmtDateRanges(keys){
+  if(!keys.length)return '';
+  keys.sort();
+  const ranges=[];
+  let rs=keys[0],re=keys[0];
+  for(let i=1;i<keys.length;i++){
+    const prev=toDate(keys[i-1]); prev.setDate(prev.getDate()+1);
+    if(toKey(prev)===keys[i]){re=keys[i];}
+    else{ranges.push(rs===re?korShort(rs):`${korShort(rs)}~${korShort(re)}`);rs=re=keys[i];}
+  }
+  ranges.push(rs===re?korShort(rs):`${korShort(rs)}~${korShort(re)}`);
+  return ranges.join(', ');
+}
 
 function isConfigured() { return SCRIPT_URL !== 'APPS_SCRIPT_URL_HERE' && SCRIPT_URL.startsWith('https://'); }
 
@@ -352,9 +366,14 @@ async function doAdd() {
   if (!selStart || !selEnd) return;
 
   // 학교 일정 및 주의 날짜 경고 (등록 가능)
-  {const wSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
-   while(c<=se){const k=toKey(c);const r=schoolBlockedReason(k)||softWarnReason(k);if(r)wSet.add(r);c.setDate(c.getDate()+1);}
-   if(wSet.size>0){if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n(사유: ${[...wSet].join(', ')})`))return;}}
+  let warnInfo='';
+  {const wMap=new Map(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
+   while(c<=se){const k=toKey(c);const r=schoolBlockedReason(k)||softWarnReason(k);if(r){if(!wMap.has(r))wMap.set(r,[]);wMap.get(r).push(k);}c.setDate(c.getDate()+1);}
+   if(wMap.size>0){
+     const lines=[...wMap.entries()].map(([r,ds])=>`${r} (${fmtDateRanges(ds)})`);
+     if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n${lines.join('\n')}`))return;
+     warnInfo=lines.join(', ');
+   }}
 
   // 날짜 겹침 검사
   const overlap = vacations.filter(v => selStart <= v.end && selEnd >= v.start);
@@ -374,7 +393,10 @@ async function doAdd() {
 
   const yrs = parseInt(document.getElementById('yearsInput').value) || 0;
   const mos = parseInt(document.getElementById('monthsInput').value) || 0;
-  const memo = (yrs > 0 || mos > 0) ? `재직기간 ${yrs}년 ${mos}월` : '';
+  const memoParts = [];
+  if(yrs>0||mos>0) memoParts.push(`재직기간 ${yrs}년 ${mos}월`);
+  if(warnInfo) memoParts.push(`⚠️경고: ${warnInfo}`);
+  const memo = memoParts.join(' | ');
   const btn  = document.getElementById('addBtn');
   btn.disabled=true; btn.textContent='저장 중…';
   try {
