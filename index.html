@@ -57,6 +57,8 @@
     .dc.today   { font-weight: 700; outline: 2px solid #2d6a9f; outline-offset: -2px; }
     .dc.blocked { background: #f5f5f5 !important; color: #ccc !important; cursor: not-allowed; text-decoration: line-through; }
     .dc.holiday { color: #e74c3c !important; }
+    .dc.has-ev  { flex-direction: column; gap: 1px; }
+    .dc .ev-lbl { font-size: 7px; color: #999; text-align: center; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; pointer-events: none; }
 
     .dc.sel-s { background: #2d6a9f !important; color: white !important; font-weight: 700; }
     .dc.in-r  { background: #cce0f5; color: #1e3a5f; border-radius: 0; }
@@ -349,17 +351,10 @@ async function doAdd() {
   ni.classList.remove('bad');
   if (!selStart || !selEnd) return;
 
-  // 학교 일정 차단 날짜 포함 여부 검사
-  {const sbSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
-   while(c<=se){const r=schoolBlockedReason(toKey(c));if(r)sbSet.add(r);c.setDate(c.getDate()+1);}
-   if(sbSet.size>0){alert(`선택한 기간에 휴가를 등록할 수 없습니다.\n\n포함된 학교 일정: ${[...sbSet].join(', ')}\n\n해당 날짜를 제외하고 다시 선택해 주세요.`);return;}}
-
-  // 소프트 경고 날짜 포함 여부 검사 (등록은 가능)
-  {const swSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
-   while(c<=se){const r=softWarnReason(toKey(c));if(r)swSet.add(r);c.setDate(c.getDate()+1);}
-   if(swSet.size>0){
-     if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n(사유: ${[...swSet].join(', ')})`))return;
-   }}
+  // 학교 일정 및 주의 날짜 경고 (등록 가능)
+  {const wSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
+   while(c<=se){const k=toKey(c);const r=schoolBlockedReason(k)||softWarnReason(k);if(r)wSet.add(r);c.setDate(c.getDate()+1);}
+   if(wSet.size>0){if(!confirm(`다음과 같은 사유로 장기재직휴가를 사용하지 못할 가능성이 높습니다.\n그래도 등록하시겠습니까?\n\n(사유: ${[...wSet].join(', ')})`))return;}}
 
   // 날짜 겹침 검사
   const overlap = vacations.filter(v => selStart <= v.end && selEnd >= v.start);
@@ -433,18 +428,18 @@ function buildMonth(year, month) {
     const key=`${year}-${pad(month)}-${pad(d)}`;
     const dow=new Date(year,month-1,d).getDay();
     const cell=document.createElement('div');
-    cell.textContent=d; cell.dataset.key=key;
+    const numEl=document.createElement('span'); numEl.textContent=d; cell.appendChild(numEl);
+    cell.dataset.key=key;
     const cls=['dc'];
     if(dow===0)cls.push('sun'); if(dow===6)cls.push('sat');
     if(key===today)cls.push('today');
     if(HOLIDAYS.has(key))cls.push('holiday');
     const sbr=schoolBlockedReason(key);
-    if(blocked.has(key)||sbr){
-      cls.push('blocked');
-      if(sbr){const tip=document.createElement('div');tip.className='tip';tip.textContent=sbr;cell.appendChild(tip);}
-    }else{
-      styleCell(cls,cell,key);
-    }
+    const swr=softWarnReason(key);
+    const evLabel=sbr||swr;
+    if(evLabel){cls.push('has-ev');const lbl=document.createElement('div');lbl.className='ev-lbl';lbl.textContent=evLabel;cell.appendChild(lbl);}
+    if(blocked.has(key)){cls.push('blocked');}
+    else{styleCell(cls,cell,key);}
     cell.className=cls.join(' ');
     dg.appendChild(cell);
   }
