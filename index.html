@@ -47,7 +47,7 @@
     .days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
     .dc {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 12px; border-radius: 5px; cursor: pointer;
+      font-size: 14px; border-radius: 5px; cursor: pointer;
       transition: all .12s; user-select: none; position: relative;
     }
     .dc:hover:not(.empty):not(.blocked) { background: #e8f0fe; transform: scale(1.1); }
@@ -244,25 +244,36 @@
 </div>
 
 <script>
-// ================================================================
-//  ★ 관리자 설정: 아래 URL을 Apps Script 배포 URL로 교체하세요 ★
-// ================================================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzD6fxx8gtmlaXGBerym7_-lYppC6hUIsbp46uZt6jlEc_9Sn83INPzm8Dq3sp0gS6t/exec';
-// ================================================================
 
 const MONTHS = [
   {y:2026,m:8},{y:2026,m:9},{y:2026,m:10},
   {y:2026,m:11},{y:2026,m:12},{y:2027,m:1}
 ];
-// 2026-2027 대한민국 공휴일 (대체공휴일 포함)
 const HOLIDAYS = new Set([
-  '2026-08-15','2026-08-17',                          // 광복절, 대체공휴일(토→월)
-  '2026-09-24','2026-09-25','2026-09-26','2026-09-28',// 추석 연휴(목-토), 대체공휴일(월)
-  '2026-10-03','2026-10-05',                          // 개천절(토), 대체공휴일(월)
-  '2026-10-09',                                       // 한글날(금)
-  '2026-12-25',                                       // 크리스마스(금)
-  '2027-01-01',                                       // 신정(금)
+  '2026-08-15','2026-08-17',
+  '2026-09-24','2026-09-25','2026-09-26','2026-09-28',
+  '2026-10-03','2026-10-05',
+  '2026-10-09',
+  '2026-12-25',
+  '2027-01-01',
 ]);
+const SCHOOL_BLOCKED_RANGES = [
+  {s:'2026-08-01',e:'2026-08-17',r:'여름방학'},
+  {s:'2026-08-18',e:'2026-08-18',r:'개학'},
+  {s:'2026-09-29',e:'2026-09-30',r:'정기시험'},
+  {s:'2026-10-19',e:'2026-10-19',r:'학부모공개수업'},
+  {s:'2026-10-23',e:'2026-10-23',r:'스포츠의 날'},
+  {s:'2026-11-16',e:'2026-11-18',r:'정기시험'},
+  {s:'2026-11-19',e:'2026-11-19',r:'수능시험'},
+  {s:'2026-12-07',e:'2026-12-09',r:'정기시험'},
+  {s:'2026-12-24',e:'2026-12-24',r:'축제'},
+  {s:'2027-01-07',e:'2027-01-31',r:'겨울방학'},
+];
+function schoolBlockedReason(key){
+  for(const {s,e,r} of SCHOOL_BLOCKED_RANGES){if(key>=s&&key<=e)return r;}
+  return null;
+}
 const MN  = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const DN  = ['일','월','화','수','목','금','토'];
 const today = toKey(new Date());
@@ -276,12 +287,7 @@ let hover     = null;
 function pad(n)  { return String(n).padStart(2,'0'); }
 function toKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function toDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
-
-// 구글 스프레드시트가 날짜를 ISO 문자열로 바꾸는 문제 정규화
-function normDate(v){
-  if(!v) return '';
-  return String(v).substring(0,10); // "YYYY-MM-DD" or "YYYY-MM-DDT..." → 앞 10자리만
-}
+function normDate(v){ if(!v) return ''; return String(v).substring(0,10); }
 function kor(k){
   if(!k) return '';
   const [y,m,d]=k.split('-').map(Number);
@@ -297,7 +303,6 @@ function inR(d,s,e){ return d>=s&&d<=e; }
 function ci(id){ return Number(String(id).slice(-1)) % 5; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── API 연결 ──────────────────────────────────────────────
 function isConfigured() { return SCRIPT_URL !== 'APPS_SCRIPT_URL_HERE' && SCRIPT_URL.startsWith('https://'); }
 
 async function fetchData(manual=false) {
@@ -329,6 +334,11 @@ async function doAdd() {
   if (!name) { ni.classList.add('bad'); ni.placeholder='이름을 입력해주세요!'; ni.focus(); return; }
   ni.classList.remove('bad');
   if (!selStart || !selEnd) return;
+
+  // 학교 일정 차단 날짜 포함 여부 검사
+  {const sbSet=new Set(); let c=new Date(toDate(selStart)),se=toDate(selEnd);
+   while(c<=se){const r=schoolBlockedReason(toKey(c));if(r)sbSet.add(r);c.setDate(c.getDate()+1);}
+   if(sbSet.size>0){alert(`선택한 기간에 휴가를 등록할 수 없습니다.\n\n포함된 학교 일정: ${[...sbSet].join(', ')}\n\n해당 날짜를 제외하고 다시 선택해 주세요.`);return;}}
 
   // 날짜 겹침 검사
   const overlap = vacations.filter(v => selStart <= v.end && selEnd >= v.start);
@@ -379,7 +389,6 @@ async function doDel(id, name) {
   }
 }
 
-// ── 캘린더 렌더링 ─────────────────────────────────────────
 function renderAll() {
   const g = document.getElementById('monthGrid');
   g.innerHTML = '';
@@ -408,8 +417,10 @@ function buildMonth(year, month) {
     if(dow===0)cls.push('sun'); if(dow===6)cls.push('sat');
     if(key===today)cls.push('today');
     if(HOLIDAYS.has(key))cls.push('holiday');
-    if(blocked.has(key)){
+    const sbr=schoolBlockedReason(key);
+    if(blocked.has(key)||sbr){
       cls.push('blocked');
+      if(sbr){const tip=document.createElement('div');tip.className='tip';tip.textContent=sbr;cell.appendChild(tip);}
     }else{
       styleCell(cls,cell,key);
     }
@@ -446,7 +457,6 @@ function markR(cls,key,s,e){
   else cls.push('in-r');
 }
 
-// hover 미리보기: DOM 재구성 없이 클래스만 업데이트
 function updateHover(){
   document.querySelectorAll('.dc[data-key]').forEach(cell=>{
     const k=cell.dataset.key;
@@ -519,18 +529,13 @@ function setSt(state,msg){ document.getElementById('sDot').className='dot '+stat
 let _t;
 function toast(msg,type=''){ const el=document.getElementById('toast'); el.textContent=msg; el.className='show '+(type||''); clearTimeout(_t); _t=setTimeout(()=>el.className='',3200); }
 
-// ── 이벤트 위임: monthGrid 하나에서 모든 클릭·호버 처리 ──
 function initEvents(){
   const grid=document.getElementById('monthGrid');
-
-  // 클릭 — renderAll()로 재구성된 셀에도 항상 동작
   grid.addEventListener('click',e=>{
     const cell=e.target.closest('.dc[data-key]');
     if(!cell||cell.classList.contains('blocked')||cell.classList.contains('empty'))return;
     onDay(cell.dataset.key);
   });
-
-  // 마우스 이동 — 셀이 바뀔 때만 updateHover() 호출
   grid.addEventListener('mouseover',e=>{
     if(!selStart||selEnd)return;
     const cell=e.target.closest('.dc[data-key]');
@@ -538,21 +543,16 @@ function initEvents(){
       ?cell.dataset.key:null;
     if(nk!==hover){hover=nk;updateHover();}
   });
-
-  // 그리드 밖으로 나가면 hover 초기화
   grid.addEventListener('mouseleave',()=>{
     if(hover){hover=null;updateHover();}
   });
 }
 
-// ── 자동 새로고침 60초 ──
 setInterval(()=>fetchData(),60000);
-
-// ── 초기 실행 ──
 renderAll();
 updateForm();
 fetchData();
-initEvents(); // 이벤트 위임 1회 등록
+initEvents();
 </script>
 </body>
 </html>
