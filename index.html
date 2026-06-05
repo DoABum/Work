@@ -56,6 +56,7 @@
     .dc.sat     { color: #3498db; }
     .dc.today   { font-weight: 700; outline: 2px solid #2d6a9f; outline-offset: -2px; }
     .dc.blocked { background: #f5f5f5 !important; color: #ccc !important; cursor: not-allowed; text-decoration: line-through; }
+    .dc.holiday { color: #e74c3c !important; }
 
     .dc.sel-s { background: #2d6a9f !important; color: white !important; font-weight: 700; }
     .dc.in-r  { background: #cce0f5; color: #1e3a5f; border-radius: 0; }
@@ -219,8 +220,13 @@
           <div class="ddisp" id="endDisp">날짜를 클릭하세요</div>
         </div>
         <div>
-          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">메모 (선택)</label>
-          <textarea class="tinput" id="memoInput" placeholder="비고 사항"></textarea>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">재직기간</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" class="tinput" id="yearsInput" placeholder="0" min="0" max="50" style="width:65px;text-align:center;">
+            <span style="font-size:13px;color:#555;flex-shrink:0;">년</span>
+            <input type="number" class="tinput" id="monthsInput" placeholder="0" min="0" max="11" style="width:65px;text-align:center;">
+            <span style="font-size:13px;color:#555;flex-shrink:0;">월</span>
+          </div>
         </div>
         <div class="brow">
           <button class="btn btn-s" onclick="resetSel()">초기화</button>
@@ -248,6 +254,15 @@ const MONTHS = [
   {y:2026,m:8},{y:2026,m:9},{y:2026,m:10},
   {y:2026,m:11},{y:2026,m:12},{y:2027,m:1}
 ];
+// 2026-2027 대한민국 공휴일 (대체공휴일 포함)
+const HOLIDAYS = new Set([
+  '2026-08-15','2026-08-17',                          // 광복절, 대체공휴일(토→월)
+  '2026-09-24','2026-09-25','2026-09-26','2026-09-28',// 추석 연휴(목-토), 대체공휴일(월)
+  '2026-10-03','2026-10-05',                          // 개천절(토), 대체공휴일(월)
+  '2026-10-09',                                       // 한글날(금)
+  '2026-12-25',                                       // 크리스마스(금)
+  '2027-01-01',                                       // 신정(금)
+]);
 const MN  = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const DN  = ['일','월','화','수','목','금','토'];
 const today = toKey(new Date());
@@ -331,7 +346,9 @@ async function doAdd() {
     if (!confirm(msg)) return;
   }
 
-  const memo = document.getElementById('memoInput').value.trim();
+  const yrs = parseInt(document.getElementById('yearsInput').value) || 0;
+  const mos = parseInt(document.getElementById('monthsInput').value) || 0;
+  const memo = (yrs > 0 || mos > 0) ? `재직기간 ${yrs}년 ${mos}월` : '';
   const btn  = document.getElementById('addBtn');
   btn.disabled=true; btn.textContent='저장 중…';
   try {
@@ -390,6 +407,7 @@ function buildMonth(year, month) {
     const cls=['dc'];
     if(dow===0)cls.push('sun'); if(dow===6)cls.push('sat');
     if(key===today)cls.push('today');
+    if(HOLIDAYS.has(key))cls.push('holiday');
     if(blocked.has(key)){
       cls.push('blocked');
     }else{
@@ -470,7 +488,8 @@ function resetSel(){
   document.getElementById('nameInput').value='';
   document.getElementById('nameInput').classList.remove('bad');
   document.getElementById('nameInput').placeholder='이름을 입력하세요';
-  document.getElementById('memoInput').value='';
+  document.getElementById('yearsInput').value='';
+  document.getElementById('monthsInput').value='';
   setHint(1,'캘린더에서 휴가 시작일을 클릭하세요.');
   updateForm(); renderAll();
 }
