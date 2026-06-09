@@ -163,6 +163,10 @@
     #toast.show { transform: translateX(-50%) translateY(0); }
     #toast.ok  { background: #27ae60; }
     #toast.err { background: #e74c3c; }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
   </style>
 </head>
 <body>
@@ -219,6 +223,10 @@
             <input type="number" class="tinput" id="monthsInput" placeholder="0" min="0" max="11" style="width:65px;text-align:center;">
             <span style="font-size:13px;color:#555;flex-shrink:0;">월</span>
           </div>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">비밀번호 <span style="font-size:11px;color:#aaa">(삭제시 필요)</span></label>
+          <input type="password" class="tinput" id="pwInput" placeholder="삭제 시 사용할 비밀번호" maxlength="20">
         </div>
         <div class="brow">
           <button class="btn btn-s" onclick="resetSel()">초기화</button>
@@ -402,8 +410,10 @@ async function doAdd() {
 
   const yrs = parseInt(document.getElementById('yearsInput').value) || 0;
   const mos = parseInt(document.getElementById('monthsInput').value) || 0;
+  const pw = document.getElementById('pwInput').value.trim();
   const memoParts = [];
   if(yrs>0||mos>0) memoParts.push(`재직기간 ${yrs}년 ${mos}월`);
+  if(pw) memoParts.push(`pw:${pw}`);
   if(warnInfo) memoParts.push(`⚠️경고: ${warnInfo}`);
   const memo = memoParts.join(' | ');
   const btn  = document.getElementById('addBtn');
@@ -417,13 +427,21 @@ async function doAdd() {
     resetSel();
     await fetchData();
   } catch(e) {
-    toast('등낅에 실패했습니다. 다시 시도해주세요.', 'err');
+    toast('등록에 실패했습니다. 다시 시도해주세요.', 'err');
     btn.disabled=false; btn.textContent='등록';
   }
 }
 
 async function doDel(id, name) {
-  if (!confirm(`"${name}" 선생님의 휴가를 삭제하시겠습니까?`)) return;
+  const vac = vacations.find(v => String(v.id) === String(id));
+  const storedPw = vac ? (vac.memo||'').split(' | ').find(p=>p.startsWith('pw:'))?.slice(3)||'' : '';
+  if (storedPw) {
+    const inputPw = prompt(`"${name}" 선생님 휴가 삭제\n등록 시 설정한 비밀번호를 입력하세요:`);
+    if (inputPw === null) return;
+    if (inputPw !== storedPw) { toast('비밀번호가 틀렸습니다.', 'err'); return; }
+  } else {
+    if (!confirm(`"${name}" 선생님의 휴가를 삭제하시겠습니까?`)) return;
+  }
   setSt('spin','삭제 중…');
   try {
     const res = await fetch(`${SCRIPT_URL}?action=delete&id=${id}`);
@@ -549,6 +567,7 @@ function resetSel(){
   document.getElementById('nameInput').placeholder='이름을 입력하세요';
   document.getElementById('yearsInput').value='';
   document.getElementById('monthsInput').value='';
+  document.getElementById('pwInput').value='';
   setHint(1,'캘린더에서 휴가 시작일을 클릭하세요.');
   updateForm(); renderAll();
 }
@@ -561,10 +580,11 @@ function renderList(){
     const item=document.createElement('div');
     item.className=`vitem c${ci(v.id)}`;
     item.innerHTML=`
+      <button class="bdel" onclick="doDel('${v.id}','${esc(v.name)}')" title="삭제">✕</button>
       <div class="vn">${esc(v.name)}</div>
       <div class="vr">📅 ${kor(v.start)} ~ ${kor(v.end)}</div>
       <div class="vd">총 ${totalDays(v.start,v.end)}일 (평일 ${workdays(v.start,v.end)}일)</div>
-      ${(()=>{const dm=v.memo?v.memo.split(' | ').filter(p=>!p.startsWith('재직기간')).join(' | ').trim():'';return dm?`<div class="vm">💬 ${esc(dm)}</div>`:''})()}
+      ${(()=>{const dm=v.memo?v.memo.split(' | ').filter(p=>!p.startsWith('재직기간')&&!p.startsWith('pw:')).join(' | ').trim():'';return dm?`<div class="vm">💬 ${esc(dm)}</div>`:''})()}
       <div class="vts">등록: ${v.ts}</div>`;
     l.appendChild(item);
   });
